@@ -47,3 +47,23 @@ codeview.pack(fill="both", expand=True)
 
 root.mainloop()
 ```
+
+#### Resizing CodeView Window
+You can dynamically resize the CodeView window by using the resize_window method:
+
+```python
+from tkinter import Tk
+import pygments.lexers
+from chlorophyll import CodeView
+
+root = Tk()
+
+# Create a CodeView instance with a Python lexer
+codeview = CodeView(root, lexer=pygments.lexers.PythonLexer, color_scheme="monokai")
+codeview.pack(fill="both", expand=True)
+
+# Resize the CodeView widget to a specific width and height
+codeview.resize_window(width=800, height=600)
+
+root.mainloop()
+```
