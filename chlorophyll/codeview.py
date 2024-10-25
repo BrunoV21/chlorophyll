@@ -45,6 +45,7 @@ class CodeView(Text):
         lexer: LexerType = pygments.lexers.TextLexer,
         color_scheme: dict[str, dict[str, str | int]] | str | None = None,
         tab_width: int = 4,
+        font_size :int=11,
         linenums_theme: Callable[[], tuple[str, str]] | tuple[str, str] | None = None,
         autohide_scrollbar: bool = True,
         linenums_border: int = 0,
@@ -56,7 +57,7 @@ class CodeView(Text):
         self._frame.grid_columnconfigure(1, weight=1)
 
         kwargs.setdefault("wrap", "none")
-        kwargs.setdefault("font", ("monospace", 11))
+        kwargs.setdefault("font", ("monospace", font_size))
 
         linenum_justify = kwargs.pop("justify", "left")
 
@@ -333,3 +334,9 @@ class CodeView(Text):
     def scroll_line_update(self, event: Event | None = None) -> CodeView:
         self.horizontal_scroll(*self.xview())
         self.vertical_scroll(*self.yview())
+
+    def resize_window(self, width: int, height: int) -> None:
+        """Resize the CodeView widget based on the specified width and height in pixels."""
+        self._frame.config(width=width, height=height)
+        self.config(width=width, height=height)
+        self._line_numbers.redraw()  # Update line numbers after resizing
