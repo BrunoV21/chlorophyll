@@ -50,11 +50,14 @@ class CodeView(Text):
         autohide_scrollbar: bool = True,
         linenums_border: int = 0,
         default_context_menu: bool = False,
+        show_line_numbers: bool = True,
         **kwargs,
     ) -> None:
         self._frame = ttk.Frame(master)
         self._frame.grid_rowconfigure(0, weight=1)
         self._frame.grid_columnconfigure(1, weight=1)
+
+        self.show_line_numbers = show_line_numbers
 
         kwargs.setdefault("wrap", "none")
         kwargs.setdefault("font", ("monospace", font_size))
@@ -64,19 +67,21 @@ class CodeView(Text):
         super().__init__(self._frame, **kwargs)
         super().grid(row=0, column=1, sticky="nswe")
 
-        self._line_numbers = TkLineNumbers(
-            self._frame,
-            self,
-            justify=linenum_justify,
-            colors=linenums_theme,
-            borderwidth=kwargs.get("borderwidth", linenums_border),
-        )
+        self._line_numbers = None  # Initialize with None
+        if self.show_line_numbers:  # Conditionally create line numbers
+            self._line_numbers = TkLineNumbers(
+                self._frame,
+                self,
+                justify=linenum_justify,
+                colors=linenums_theme,
+                borderwidth=kwargs.get("borderwidth", linenums_border),
+            )
+            self._line_numbers.grid(row=0, column=0, sticky="ns")
         self._vs = Scrollbar(self._frame, autohide=autohide_scrollbar, orient="vertical", command=self.yview)
         self._hs = Scrollbar(
             self._frame, autohide=autohide_scrollbar, orient="horizontal", command=self.xview
         )
 
-        self._line_numbers.grid(row=0, column=0, sticky="ns")
         self._vs.grid(row=0, column=2, sticky="ns")
         self._hs.grid(row=1, column=1, sticky="we")
 
@@ -98,7 +103,7 @@ class CodeView(Text):
         super().bind(f"<{contmand}-a>", self._select_all, add=True)
         super().bind(f"<{contmand}-Shift-Z>", self.redo, add=True)
         super().bind("<<ContentChanged>>", self.scroll_line_update, add=True)
-        super().bind("<Button-1>", self._line_numbers.redraw, add=True)
+        super().bind("<Button-1>", self._line_numbers.redraw, add=True) if self.show_line_numbers else ...
 
         self._orig = f"{self._w}_widget"
         self.tk.call("rename", self._w, self._orig)
@@ -107,7 +112,7 @@ class CodeView(Text):
         self._set_lexer(lexer)
         self._set_color_scheme(color_scheme)
 
-        self._line_numbers.redraw()
+        self._line_numbers.redraw() if self.show_line_numbers else ...
 
     @property
     def context_menu(self) -> Menu:
@@ -329,7 +334,7 @@ class CodeView(Text):
 
     def vertical_scroll(self, first: str | float, last: str | float) -> CodeView:
         self._vs.set(first, last)
-        self._line_numbers.redraw()
+        self._line_numbers.redraw() if self.show_line_numbers else ...
 
     def scroll_line_update(self, event: Event | None = None) -> CodeView:
         self.horizontal_scroll(*self.xview())
@@ -339,4 +344,8 @@ class CodeView(Text):
         """Resize the CodeView widget based on the specified width and height in pixels."""
         self._frame.config(width=width, height=height)
         self.config(width=width, height=height)
-        self._line_numbers.redraw()  # Update line numbers after resizing
+        self._line_numbers.redraw()  if self.show_line_numbers else ... # Update line numbers after resizing
+
+    def set_line_spacing(self, spacing: int) -> None:
+        """Set the vertical spacing between lines."""
+        self.configure(spacing3=spacing)
