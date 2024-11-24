@@ -51,6 +51,8 @@ class CodeView(Text):
         linenums_border: int = 0,
         default_context_menu: bool = False,
         show_line_numbers: bool = True,
+        show_vertical_scrollbar: bool = True,
+        show_horizontal_scrollbar: bool=True,
         **kwargs,
     ) -> None:
         self._frame = ttk.Frame(master)
@@ -58,6 +60,8 @@ class CodeView(Text):
         self._frame.grid_columnconfigure(1, weight=1)
 
         self.show_line_numbers = show_line_numbers
+        self.show_vertical_scrollbar = show_vertical_scrollbar
+        self.show_horizontal_scrollbar = show_horizontal_scrollbar
 
         kwargs.setdefault("wrap", "none")
         kwargs.setdefault("font", ("monospace", font_size))
@@ -77,13 +81,20 @@ class CodeView(Text):
                 borderwidth=kwargs.get("borderwidth", linenums_border),
             )
             self._line_numbers.grid(row=0, column=0, sticky="ns")
-        self._vs = Scrollbar(self._frame, autohide=autohide_scrollbar, orient="vertical", command=self.yview)
-        self._hs = Scrollbar(
-            self._frame, autohide=autohide_scrollbar, orient="horizontal", command=self.xview
-        )
-
-        self._vs.grid(row=0, column=2, sticky="ns")
-        self._hs.grid(row=1, column=1, sticky="we")
+        
+        self._vs = None  # Initialize with None
+        if self.show_vertical_scrollbar:  # Conditionally create vertical scrollbar
+            self._vs = Scrollbar(self._frame, autohide=autohide_scrollbar, orient="vertical", command=self.yview)
+            self._vs.grid(row=0, column=2, sticky="ns")
+            self._vs = Scrollbar(self._frame, autohide=autohide_scrollbar, orient="vertical", command=self.yview)
+            self._vs.grid(row=0, column=2, sticky="ns")
+            
+        self._hs = None
+        if self.show_horizontal_scrollbar:
+            self._hs = Scrollbar(
+                self._frame, autohide=autohide_scrollbar, orient="horizontal", command=self.xview
+            )
+            self._hs.grid(row=1, column=1, sticky="we")
 
         super().configure(
             yscrollcommand=self.vertical_scroll,
@@ -330,10 +341,10 @@ class CodeView(Text):
         BaseWidget.destroy(self._frame)
 
     def horizontal_scroll(self, first: str | float, last: str | float) -> CodeView:
-        self._hs.set(first, last)
+        self._hs.set(first, last) if self.show_horizontal_scrollbar else ...
 
     def vertical_scroll(self, first: str | float, last: str | float) -> CodeView:
-        self._vs.set(first, last)
+        self._vs.set(first, last) if self.show_vertical_scrollbar else ...
         self._line_numbers.redraw() if self.show_line_numbers else ...
 
     def scroll_line_update(self, event: Event | None = None) -> CodeView:
